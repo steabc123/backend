@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c3p0-config>
+    <!-- 默认配置 -->
+    <default-config>
+        <!-- JDBC驱动 -->
+        <property name="driverClass">com.mysql.cj.jdbc.Driver</property>
+        
+        <!-- 数据库连接URL -->
+        <property name="jdbcUrl">jdbc:mysql://localhost:3307/fruitshop?useUnicode=true&amp;characterEncoding=utf8&amp;useSSL=false&amp;serverTimezone=Asia/Shanghai&amp;useServerPrepStmts=true&amp;cachePrepStmts=true</property>
+        
+        <!-- 数据库用户名 -->
+        <property name="user">root</property>
+        
+        <!-- 数据库密码 -->
+        <property name="password">666</property>
+        
+        <!-- 初始化连接数 -->
+        <property name="initialPoolSize">5</property>
+        
+        <!-- 最小连接数 -->
+        <property name="minPoolSize">5</property>
+        
+        <!-- 最大连接数 -->
+        <property name="maxPoolSize">20</property>
+        
+        <!-- 最大空闲时间(秒) -->
+        <property name="maxIdleTime">60</property>
+        
+        <!-- 获取连接超时时间(毫秒) -->
+        <property name="checkoutTimeout">3000</property>
+        
+        <!-- 每60秒检查一次空闲连接 -->
+        <property name="idleConnectionTestPeriod">60</property>
+        
+        <!-- 连接测试SQL -->
+        <property name="preferredTestQuery">SELECT 1</property>
+    </default-config>
+    
+    <!-- 命名配置（可选） -->
+    <named-config name="fruitshop">
+        <property name="driverClass">com.mysql.cj.jdbc.Driver</property>
+        <property name="jdbcUrl">jdbc:mysql://localhost:3307/fruitshop?useUnicode=true&amp;characterEncoding=utf8&amp;useSSL=false&amp;serverTimezone=Asia/Shanghai&amp;useServerPrepStmts=true&amp;cachePrepStmts=true</property>
+        <property name="user">root</property>
+        <property name="password">666</property>
+        <property name="initialPoolSize">10</property>
+        <property name="minPoolSize">10</property>
+        <property name="maxPoolSize">50</property>
+        <property name="maxIdleTime">120</property>
+        <property name="checkoutTimeout">5000</property>
+    </named-config>
+</c3p0-config>
