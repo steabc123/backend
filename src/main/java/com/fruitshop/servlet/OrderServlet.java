@@ -1,5 +1,6 @@
 package com.fruitshop.servlet;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fruitshop.entity.Order;
 import com.fruitshop.entity.OrderItem;
 import com.fruitshop.service.OrderService;
@@ -117,11 +118,12 @@ public class OrderServlet extends HttpServlet {
         response.setContentType("application/json;charset=utf-8");
 
         try {
+            // 读取请求体
+            String requestBody = request.getReader().lines().reduce("", (a, b) -> a + b);
+            System.out.println("订单请求数据: " + requestBody);
+            
             // 解析请求体，期望格式: {"order": {...}, "items": [...]}
-            Map<String, Object> requestData = JsonUtil.fromJson(
-                request.getReader().lines().reduce("", (a, b) -> a + b), 
-                Map.class
-            );
+            Map<String, Object> requestData = JsonUtil.fromJson(requestBody, Map.class);
             
             if (requestData == null) {
                 ResponseUtil.error(response, 400, "请求数据格式错误");
@@ -129,7 +131,13 @@ public class OrderServlet extends HttpServlet {
             }
 
             Order order = JsonUtil.fromJson(JsonUtil.toJson(requestData.get("order")), Order.class);
-            List<OrderItem> items = JsonUtil.fromJson(JsonUtil.toJson(requestData.get("items")), List.class);
+            List<OrderItem> items = JsonUtil.fromJson(
+                JsonUtil.toJson(requestData.get("items")), 
+                new TypeReference<List<OrderItem>>() {}
+            );
+            
+            System.out.println("解析后的订单: " + order);
+            System.out.println("解析后的订单项数量: " + (items != null ? items.size() : 0));
             
             if (order == null || items == null || items.isEmpty()) {
                 ResponseUtil.error(response, 400, "订单信息或明细不能为空");
@@ -143,9 +151,13 @@ public class OrderServlet extends HttpServlet {
                 ResponseUtil.error(response, "创建订单失败");
             }
         } catch (RuntimeException e) {
+            // 返回具体的业务异常信息
             ResponseUtil.error(response, 400, e.getMessage());
+            e.printStackTrace();
         } catch (Exception e) {
+            // 记录详细错误日志
             ResponseUtil.error(response, "服务器内部错误: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

@@ -41,6 +41,11 @@ public class OrderItem implements Serializable {
     private BigDecimal subtotal;
 
     /**
+     * 水果名称（非数据库字段，用于接口返回）
+     */
+    private String fruitName;
+
+    /**
      * 创建时间
      */
     private Date createdAt;
@@ -92,6 +97,14 @@ public class OrderItem implements Serializable {
 
     public void setSubtotal(BigDecimal subtotal) {
         this.subtotal = subtotal;
+    }
+
+    public String getFruitName() {
+        return fruitName;
+    }
+
+    public void setFruitName(String fruitName) {
+        this.fruitName = fruitName;
     }
 
     public Date getCreatedAt() {

@@ -2,6 +2,7 @@ package com.fruitshop.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
  * JSON工具类
@@ -22,11 +23,23 @@ public class JsonUtil {
     }
 
     /**
-     * JSON字符串转对象
+     * JSON字符串转对象（支持泛型）
      */
     public static <T> T fromJson(String json, Class<T> clazz) {
         try {
             return objectMapper.readValue(json, clazz);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * JSON字符串转对象（支持复杂泛型类型）
+     */
+    public static <T> T fromJson(String json, TypeReference<T> typeReference) {
+        try {
+            return objectMapper.readValue(json, typeReference);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
             return null;

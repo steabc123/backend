@@ -8,8 +8,12 @@ import com.fruitshop.entity.Order;
 import com.fruitshop.entity.OrderItem;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 订单业务逻辑层
@@ -83,6 +87,11 @@ public class OrderService {
         }
 
         // 设置订单信息
+        if (order.getOrderNo() == null || order.getOrderNo().isEmpty()) {
+            // 自动生成订单号：ORD + 时间戳 + 随机数
+            String orderNo = "ORD" + System.currentTimeMillis() + (int)(Math.random() * 1000);
+            order.setOrderNo(orderNo);
+        }
         order.setTotalAmount(totalAmount);
         if (order.getStatus() == null || order.getStatus().isEmpty()) {
             order.setStatus("待支付");
@@ -124,8 +133,18 @@ public class OrderService {
         return true;
     }
 
+    // 合法的状态流转映射
+    private static final Map<String, List<String>> VALID_TRANSITIONS = new HashMap<>();
+    static {
+        VALID_TRANSITIONS.put("待支付", Arrays.asList("已支付", "已取消"));
+        VALID_TRANSITIONS.put("已支付", Arrays.asList("配送中", "已取消"));
+        VALID_TRANSITIONS.put("配送中", Arrays.asList("已完成", "已取消"));
+        VALID_TRANSITIONS.put("已完成", Arrays.asList());
+        VALID_TRANSITIONS.put("已取消", Arrays.asList());
+    }
+
     /**
-     * 更新订单状态
+     * 更新订单状态（含状态流转验证）
      */
     public boolean updateOrderStatus(Integer orderId, String status) {
         if (orderId == null || status == null || status.isEmpty()) {
@@ -136,6 +155,31 @@ public class OrderService {
         Order order = orderDao.findById(orderId);
         if (order == null) {
             throw new RuntimeException("订单不存在");
+        }
+
+        String currentStatus = order.getStatus();
+
+        // 状态没有变化，直接返回成功
+        if (currentStatus.equals(status)) {
+            return true;
+        }
+
+        // 验证状态流转是否合法
+        List<String> allowedNext = VALID_TRANSITIONS.getOrDefault(currentStatus, Arrays.asList());
+        if (!allowedNext.contains(status)) {
+            throw new RuntimeException("不允许从「" + currentStatus + "」变更到「" + status + "」");
+        }
+
+        // 如果订单状态变更为"已取消"，恢复库存
+        if ("已取消".equals(status)) {
+            List<OrderItem> items = orderItemDao.findByOrderId(orderId);
+            for (OrderItem item : items) {
+                Fruit fruit = fruitDao.findById(item.getFruitId());
+                if (fruit != null) {
+                    int newStock = fruit.getStockQuantity() + item.getQuantity().intValue();
+                    fruitDao.updateStock(item.getFruitId(), newStock);
+                }
+            }
         }
 
         int rows = orderDao.updateStatus(orderId, status);
@@ -159,12 +203,20 @@ public class OrderService {
     }
 
     /**
-     * 获取订单明细列表
+     * 获取订单明细列表（包含水果名称）
      */
     public List<OrderItem> getOrderItems(Integer orderId) {
         if (orderId == null) {
             throw new RuntimeException("订单ID不能为空");
         }
-        return orderItemDao.findByOrderId(orderId);
+        List<OrderItem> items = orderItemDao.findByOrderId(orderId);
+        // 填充水果名称
+        for (OrderItem item : items) {
+            Fruit fruit = fruitDao.findById(item.getFruitId());
+            if (fruit != null) {
+                item.setFruitName(fruit.getName());
+            }
+        }
+        return items;
     }
 }
