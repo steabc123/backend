@@ -131,7 +131,9 @@ public class FruitServlet extends HttpServlet {
                 return;
             }
 
+            // 禁止修改主键ID，始终使用路径参数中的ID
             fruit.setId(id);
+            
             boolean success = fruitService.updateFruit(fruit);
             if (success) {
                 ResponseUtil.success(response, fruit);

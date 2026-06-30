@@ -35,6 +35,16 @@ public class Customer implements Serializable {
     private String address;
 
     /**
+     * 密码
+     */
+    private String password;
+
+    /**
+     * 角色：customer-顾客，admin-管理员
+     */
+    private String role;
+
+    /**
      * 注册时间
      */
     private Date createdAt;
@@ -80,6 +90,22 @@ public class Customer implements Serializable {
         this.address = address;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     public Date getCreatedAt() {
         return createdAt;
     }
@@ -96,6 +122,8 @@ public class Customer implements Serializable {
                 ", phone='" + phone + '\'' +
                 ", gender='" + gender + '\'' +
                 ", address='" + address + '\'' +
+                ", password='" + password + '\'' +
+                ", role='" + role + '\'' +
                 ", createdAt=" + createdAt +
                 '}';
     }

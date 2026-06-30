@@ -5,14 +5,4 @@
 
   <display-name>Fruit Store Backend</display-name>
 
-  <!-- CORS跨域过滤器 -->
-  <filter>
-    <filter-name>CorsFilter</filter-name>
-    <filter-class>com.fruitshop.servlet.CorsFilter</filter-class>
-  </filter>
-  <filter-mapping>
-    <filter-name>CorsFilter</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
-
 </web-app>

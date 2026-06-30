@@ -49,6 +49,43 @@ public class CustomerDao {
     }
 
     /**
+     * 根据用户名和密码查询顾客（登录）
+     */
+    public Customer findByNameAndPassword(String name, String password) {
+        String sql = "SELECT * FROM customers WHERE name = ? AND password = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            pstmt.setString(2, password);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return mapRow(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 根据用户名查询顾客
+     */
+    public Customer findByName(String name) {
+        String sql = "SELECT * FROM customers WHERE name = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return mapRow(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * 查询所有顾客
      */
     public List<Customer> findAll() {
@@ -70,14 +107,16 @@ public class CustomerDao {
      * 添加顾客
      */
     public int insert(Customer customer) {
-        String sql = "INSERT INTO customers(name, phone, gender, address, created_at) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO customers(name, phone, gender, address, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, customer.getName());
             pstmt.setString(2, customer.getPhone());
             pstmt.setString(3, customer.getGender());
             pstmt.setString(4, customer.getAddress());
-            pstmt.setTimestamp(5, new Timestamp(customer.getCreatedAt().getTime()));
+            pstmt.setString(5, customer.getPassword() != null ? customer.getPassword() : "123456");
+            pstmt.setString(6, customer.getRole() != null ? customer.getRole() : "customer");
+            pstmt.setTimestamp(7, new Timestamp(customer.getCreatedAt().getTime()));
             int rows = pstmt.executeUpdate();
             if (rows > 0) {
                 ResultSet keys = pstmt.getGeneratedKeys();
@@ -96,16 +135,24 @@ public class CustomerDao {
      * 更新顾客信息
      */
     public int update(Customer customer) {
-        String sql = "UPDATE customers SET name=?, phone=?, gender=?, address=? WHERE id=?";
+        String sql = "UPDATE customers SET name=?, phone=?, gender=?, address=?, password=? WHERE id=?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, customer.getName());
             pstmt.setString(2, customer.getPhone());
             pstmt.setString(3, customer.getGender());
             pstmt.setString(4, customer.getAddress());
-            pstmt.setInt(5, customer.getId());
-            return pstmt.executeUpdate();
+            pstmt.setString(5, customer.getPassword() != null ? customer.getPassword() : "123456");
+            pstmt.setInt(6, customer.getId());
+            System.out.println("执行SQL: " + sql);
+            System.out.println("参数: name=" + customer.getName() + ", phone=" + customer.getPhone() + 
+                             ", gender=" + customer.getGender() + ", address=" + customer.getAddress() + 
+                             ", password=" + (customer.getPassword() != null ? "***" : "null") + ", id=" + customer.getId());
+            int rows = pstmt.executeUpdate();
+            System.out.println("更新结果: " + rows + " 行受影响");
+            return rows;
         } catch (SQLException e) {
+            System.err.println("更新顾客失败: " + e.getMessage());
             e.printStackTrace();
         }
         return 0;
@@ -136,6 +183,8 @@ public class CustomerDao {
         customer.setPhone(rs.getString("phone"));
         customer.setGender(rs.getString("gender"));
         customer.setAddress(rs.getString("address"));
+        customer.setPassword(rs.getString("password"));
+        customer.setRole(rs.getString("role"));
         customer.setCreatedAt(rs.getTimestamp("created_at"));
         return customer;
     }

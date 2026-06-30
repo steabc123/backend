@@ -1,6 +1,7 @@
 package com.fruitshop.servlet;
 
 import jakarta.servlet.*;
+import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -9,6 +10,7 @@ import java.io.IOException;
 /**
  * CORS跨域过滤器 - 允许所有来源的跨域请求
  */
+@WebFilter("/*")
 public class CorsFilter implements Filter {
 
     @Override

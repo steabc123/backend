@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 顾客Servlet - 处理顾客相关的HTTP请求
@@ -78,21 +79,62 @@ public class CustomerServlet extends HttpServlet {
     }
 
     /**
-     * POST请求处理 - 添加顾客
+     * POST请求处理
+     * /api/customer/login - 顾客登录
+     * /api/customer/register - 顾客注册
+     * 其他 - 添加顾客
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json;charset=utf-8");
 
+        String pathInfo = request.getPathInfo();
+
         try {
-            Customer customer = JsonUtil.fromJson(request.getReader().lines().reduce("", (a, b) -> a + b), Customer.class);
-            
+            // 顾客登录
+            if ("/login".equals(pathInfo)) {
+                Map<String, String> loginData = JsonUtil.fromJson(
+                    request.getReader().lines().reduce("", (a, b) -> a + b), Map.class);
+                if (loginData == null || loginData.get("name") == null || loginData.get("password") == null) {
+                    ResponseUtil.error(response, 400, "用户名和密码不能为空");
+                    return;
+                }
+                Customer customer = customerService.login(loginData.get("name"), loginData.get("password"));
+                if (customer != null) {
+                    // 登录成功，将用户信息存入Session
+                    request.getSession().setAttribute("loginUser", customer);
+                    ResponseUtil.success(response, customer);
+                } else {
+                    ResponseUtil.error(response, 401, "用户名或密码错误");
+                }
+                return;
+            }
+
+            // 顾客注册
+            if ("/register".equals(pathInfo)) {
+                Customer customer = JsonUtil.fromJson(
+                    request.getReader().lines().reduce("", (a, b) -> a + b), Customer.class);
+                if (customer == null) {
+                    ResponseUtil.error(response, 400, "请求数据格式错误");
+                    return;
+                }
+                boolean success = customerService.register(customer);
+                if (success) {
+                    ResponseUtil.success(response, customer);
+                } else {
+                    ResponseUtil.error(response, "注册失败");
+                }
+                return;
+            }
+
+            // 添加顾客（原有逻辑）
+            Customer customer = JsonUtil.fromJson(
+                request.getReader().lines().reduce("", (a, b) -> a + b), Customer.class);
             if (customer == null) {
                 ResponseUtil.error(response, 400, "请求数据格式错误");
                 return;
             }
-
             boolean success = customerService.addCustomer(customer);
             if (success) {
                 ResponseUtil.success(response, customer);
@@ -128,7 +170,10 @@ public class CustomerServlet extends HttpServlet {
             }
 
             Integer id = Integer.parseInt(parts[1]);
-            Customer customer = JsonUtil.fromJson(request.getReader().lines().reduce("", (a, b) -> a + b), Customer.class);
+            String requestBody = request.getReader().lines().reduce("", (a, b) -> a + b);
+            System.out.println("更新顾客请求 - ID: " + id + ", 数据: " + requestBody);
+            
+            Customer customer = JsonUtil.fromJson(requestBody, Customer.class);
             
             if (customer == null) {
                 ResponseUtil.error(response, 400, "请求数据格式错误");
@@ -136,7 +181,9 @@ public class CustomerServlet extends HttpServlet {
             }
 
             customer.setId(id);
+            System.out.println("开始更新顾客...");
             boolean success = customerService.updateCustomer(customer);
+            System.out.println("更新结果: " + (success ? "成功" : "失败"));
             if (success) {
                 ResponseUtil.success(response, customer);
             } else {
@@ -145,8 +192,12 @@ public class CustomerServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             ResponseUtil.error(response, 400, "参数格式错误");
         } catch (RuntimeException e) {
+            System.err.println("更新顾客业务异常: " + e.getMessage());
+            e.printStackTrace();
             ResponseUtil.error(response, 400, e.getMessage());
         } catch (Exception e) {
+            System.err.println("更新顾客服务器异常: " + e.getMessage());
+            e.printStackTrace();
             ResponseUtil.error(response, "服务器内部错误: " + e.getMessage());
         }
     }
