@@ -219,4 +219,21 @@ public class OrderService {
         }
         return items;
     }
+
+    /**
+     * 获取顾客订单统计（各状态订单数量）
+     */
+    public Map<String, Integer> getOrderStats(Integer customerId) {
+        if (customerId == null) {
+            throw new RuntimeException("顾客ID不能为空");
+        }
+        Map<String, Integer> stats = orderDao.countByCustomerId(customerId);
+        // 计算总订单数
+        int total = 0;
+        for (int count : stats.values()) {
+            total += count;
+        }
+        stats.put("total", total);
+        return stats;
+    }
 }

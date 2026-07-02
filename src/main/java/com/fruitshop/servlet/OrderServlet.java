@@ -65,6 +65,14 @@ public class OrderServlet extends HttpServlet {
             // 根据顾客ID查询
             if (pathInfo.startsWith("/customer/")) {
                 String customerIdStr = pathInfo.substring(10);
+                // 检查是否是订单统计请求: /api/order/customer/{id}/stats
+                if (customerIdStr.endsWith("/stats")) {
+                    customerIdStr = customerIdStr.substring(0, customerIdStr.length() - 6);
+                    Integer customerId = Integer.parseInt(customerIdStr);
+                    Map<String, Integer> stats = orderService.getOrderStats(customerId);
+                    ResponseUtil.success(response, stats);
+                    return;
+                }
                 Integer customerId = Integer.parseInt(customerIdStr);
                 List<Order> orders = orderService.getOrdersByCustomerId(customerId);
                 ResponseUtil.success(response, orders);

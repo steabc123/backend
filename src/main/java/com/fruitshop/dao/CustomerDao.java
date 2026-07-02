@@ -174,6 +174,22 @@ public class CustomerDao {
     }
 
     /**
+     * 修改密码
+     */
+    public int updatePassword(Integer id, String newPassword) {
+        String sql = "UPDATE customers SET password=? WHERE id=?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, newPassword);
+            pstmt.setInt(2, id);
+            return pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    /**
      * 映射结果集到对象
      */
     private Customer mapRow(ResultSet rs) throws SQLException {

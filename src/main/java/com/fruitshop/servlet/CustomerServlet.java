@@ -150,6 +150,8 @@ public class CustomerServlet extends HttpServlet {
 
     /**
      * PUT请求处理 - 更新顾客信息
+     * /api/customer/{id} - 更新顾客信息
+     * /api/customer/{id}/password - 修改密码
      */
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -172,6 +174,38 @@ public class CustomerServlet extends HttpServlet {
             Integer id = Integer.parseInt(parts[1]);
             String requestBody = request.getReader().lines().reduce("", (a, b) -> a + b);
             System.out.println("更新顾客请求 - ID: " + id + ", 数据: " + requestBody);
+
+            // 管理员重置密码: PUT /api/customer/{id}/reset-password
+            if (parts.length >= 3 && "reset-password".equals(parts[2])) {
+                Map<String, String> data = JsonUtil.fromJson(requestBody, Map.class);
+                if (data == null || data.get("newPassword") == null) {
+                    ResponseUtil.error(response, 400, "新密码不能为空");
+                    return;
+                }
+                boolean success = customerService.resetPassword(id, data.get("newPassword"));
+                if (success) {
+                    ResponseUtil.success(response, "密码重置成功");
+                } else {
+                    ResponseUtil.error(response, "密码重置失败");
+                }
+                return;
+            }
+
+            // 修改密码: PUT /api/customer/{id}/password
+            if (parts.length >= 3 && "password".equals(parts[2])) {
+                Map<String, String> data = JsonUtil.fromJson(requestBody, Map.class);
+                if (data == null || data.get("oldPassword") == null || data.get("newPassword") == null) {
+                    ResponseUtil.error(response, 400, "旧密码和新密码不能为空");
+                    return;
+                }
+                boolean success = customerService.changePassword(id, data.get("oldPassword"), data.get("newPassword"));
+                if (success) {
+                    ResponseUtil.success(response, "密码修改成功");
+                } else {
+                    ResponseUtil.error(response, "密码修改失败");
+                }
+                return;
+            }
             
             Customer customer = JsonUtil.fromJson(requestBody, Customer.class);
             

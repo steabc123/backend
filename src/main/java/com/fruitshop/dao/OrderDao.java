@@ -5,7 +5,9 @@ import com.fruitshop.util.DBUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 订单数据访问层
@@ -163,6 +165,30 @@ public class OrderDao {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    /**
+     * 根据顾客ID统计各状态订单数量
+     */
+    public Map<String, Integer> countByCustomerId(Integer customerId) {
+        String sql = "SELECT status, COUNT(*) AS cnt FROM orders WHERE customer_id = ? GROUP BY status";
+        Map<String, Integer> stats = new HashMap<>();
+        // 初始化所有状态为0
+        String[] allStatuses = {"待支付", "已支付", "配送中", "已完成", "已取消"};
+        for (String s : allStatuses) {
+            stats.put(s, 0);
+        }
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, customerId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                stats.put(rs.getString("status"), rs.getInt("cnt"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return stats;
     }
 
     /**

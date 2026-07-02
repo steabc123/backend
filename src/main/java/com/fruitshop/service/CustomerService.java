@@ -189,4 +189,49 @@ public class CustomerService {
         int rows = customerDao.delete(id);
         return rows > 0;
     }
+
+    /**
+     * 管理员重置密码（无需旧密码）
+     */
+    public boolean resetPassword(Integer id, String newPassword) {
+        if (id == null) {
+            throw new RuntimeException("顾客ID不能为空");
+        }
+        if (newPassword == null || newPassword.isEmpty()) {
+            throw new RuntimeException("新密码不能为空");
+        }
+        Customer customer = customerDao.findById(id);
+        if (customer == null) {
+            throw new RuntimeException("顾客不存在");
+        }
+        int rows = customerDao.updatePassword(id, newPassword);
+        return rows > 0;
+    }
+
+    /**
+     * 修改密码
+     */
+    public boolean changePassword(Integer id, String oldPassword, String newPassword) {
+        if (id == null) {
+            throw new RuntimeException("顾客ID不能为空");
+        }
+        if (oldPassword == null || oldPassword.isEmpty()) {
+            throw new RuntimeException("旧密码不能为空");
+        }
+        if (newPassword == null || newPassword.isEmpty()) {
+            throw new RuntimeException("新密码不能为空");
+        }
+
+        // 验证旧密码是否正确
+        Customer customer = customerDao.findById(id);
+        if (customer == null) {
+            throw new RuntimeException("顾客不存在");
+        }
+        if (!oldPassword.equals(customer.getPassword())) {
+            throw new RuntimeException("旧密码不正确");
+        }
+
+        int rows = customerDao.updatePassword(id, newPassword);
+        return rows > 0;
+    }
 }
